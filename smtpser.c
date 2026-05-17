@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -7,7 +8,7 @@
 #define BUF_SIZE 256
 
 int main() {
-    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         perror("socket");
         return 1;
@@ -26,43 +27,56 @@ int main() {
         return 1;
     }
 
+    if (listen(sockfd, 1) < 0) {
+        perror("listen");
+        return 1;
+    }
+
     printf("Server waiting on port 8080...\n");
 
+    int clientfd = accept(sockfd, (struct sockaddr *)&client, &client_len);
+    if (clientfd < 0) {
+        perror("accept");
+        close(sockfd);
+        return 1;
+    }
+
     // Greeting
-    recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *)&client, &client_len);
+    recv(clientfd, buffer, BUF_SIZE, 0);
     printf("Client: %s\n", buffer);
     strcpy(buffer, "220 127.0.0.1");
-    sendto(sockfd, buffer, strlen(buffer)+1, 0, (struct sockaddr *)&client, client_len);
+    send(clientfd, buffer, strlen(buffer)+1, 0);
 
     // HELO
-    recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *)&client, &client_len);
+    recv(clientfd, buffer, BUF_SIZE, 0);
     printf("Client: %s\n", buffer);
-    sendto(sockfd, "250 ok", 7, 0, (struct sockaddr *)&client, client_len);
+    send(clientfd, "250 ok", 7, 0);
 
     // MAIL FROM
-    recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *)&client, &client_len);
+    recv(clientfd, buffer, BUF_SIZE, 0);
     printf("Client: %s\n", buffer);
-    sendto(sockfd, "250 ok", 7, 0, (struct sockaddr *)&client, client_len);
+    send(clientfd, "250 ok", 7, 0);
 
     // RCPT TO
-    recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *)&client, &client_len);
+    recv(clientfd, buffer, BUF_SIZE, 0);
     printf("Client: %s\n", buffer);
-    sendto(sockfd, "250 ok", 7, 0, (struct sockaddr *)&client, client_len);
+    send(clientfd, "250 ok", 7, 0);
 
     // DATA
-    recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *)&client, &client_len);
+    recv(clientfd, buffer, BUF_SIZE, 0);
     printf("Client: %s\n", buffer);
-    sendto(sockfd, "354 Go ahead", 13, 0, (struct sockaddr *)&client, client_len);
+    send(clientfd, "354 Go ahead", 13, 0);
 
     // Mail body
-    recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *)&client, &client_len);
+    recv(clientfd, buffer, BUF_SIZE, 0);
     printf("Mail body: %s\n", buffer);
 
     // QUIT
-    recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *)&client, &client_len);
+    recv(clientfd, buffer, BUF_SIZE, 0);
     printf("Client: %s\n", buffer);
-    sendto(sockfd, "221 OK", 7, 0, (struct sockaddr *)&client, client_len);
+    send(clientfd, "221 OK", 7, 0);
 
+    close(clientfd);
     close(sockfd);
     return 0;
 }

@@ -15,8 +15,8 @@ void initialize() {
 }
 
 void updateRoutes() {
-    int updated;
-    do {
+    int updated = 1;
+    while (updated) {
         updated = 0;
         for (int i = 0; i < nodes; i++) {
             for (int j = 0; j < nodes; j++) {
@@ -29,7 +29,7 @@ void updateRoutes() {
                 }
             }
         }
-    } while (updated);
+    }
 }
 
 void display() {
